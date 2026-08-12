@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="ml">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Independence Day Quiz Presentation - Audio & Speech Synthesis Fallback</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;600;700&family=Outfit:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Outfit', 'Noto Sans Malayalam', sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #0d1117, #161b22);
+        color: #f0f6fc;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .slide-container {
+        width: 90%;
+        max-width: 950px;
+        height: 580px;
+        background: #21262d;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 40px;
+        position: relative;
+        border: 1px solid #30363d;
+      }
+
+      .badge {
+        background-color: #238636;
+        color: white;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+      }
+
+      .speaking-badge {
+        background-color: #d29922;
+        color: #161b22;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        animation: pulse 1.2s infinite;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        color: #58a6ff;
+        font-weight: 700;
+      }
+
+      .sub-title {
+        font-size: 1.8rem;
+        color: #8b949e;
+        margin-bottom: 20px;
+        font-family: 'Noto Sans Malayalam', sans-serif;
+        font-weight: 600;
+      }
+
+      .qn-eng {
+        font-size: 1.55rem;
+        color: #f0f6fc;
+        margin-bottom: 15px;
+        line-height: 1.4;
+        font-weight: 600;
+      }
+
+      .qn-mal {
+        font-size: 1.45rem;
+        color: #a5d6ff;
+        margin-bottom: 25px;
+        line-height: 1.6;
+        font-family: 'Noto Sans Malayalam', sans-serif;
+        font-weight: 400;
+      }
+
+      .ans-eng {
+        font-size: 1.6rem;
+        color: #3fb950;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .ans-mal {
+        font-size: 1.5rem;
+        color: #7ee787;
+        font-family: 'Noto Sans Malayalam', sans-serif;
+        font-weight: 600;
+      }
+
+      .answer-box {
+        background-color: #161b22;
+        border-left: 5px solid #238636;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 15px;
+        width: 100%;
+      }
+
+      .controls {
+        position: absolute;
+        bottom: 20px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+      }
+
+      button {
+        background-color: #238636;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+        font-family: 'Outfit', 'Noto Sans Malayalam', sans-serif;
+      }
+
+      button:hover {
+        background-color: #2ea043;
+      }
+
+      button:disabled {
+        background-color: #484f58;
+        cursor: not-allowed;
+      }
+
+      button.secondary {
+        background-color: #30363d;
+        color: #c9d1d9;
+      }
+
+      button.secondary:hover {
+        background-color: #484f58;
+      }
+
+      .pen-down {
+        font-size: 3.5rem;
+        color: #d29922;
+        animation: pulse 1.2s infinite;
+        font-weight: 700;
+      }
+
+      .kbd-hint {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-size: 0.85rem;
+        color: #8b949e;
+        background: #161b22;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid #30363d;
+      }
+
+      .status-box {
+        position: absolute;
+        top: 15px;
+        left: 20px;
+        font-size: 0.85rem;
+        color: #3fb950;
+        background: #161b22;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid #30363d;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.08);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="slide-container" id="slide"></div>
+
+    <script>
+      let currentAudio = null
+      let availableVoices = []
+      let isReading = false
+      let activeEngineName = '📁 Mode: Audio Files (Fallback: Speech Synthesis)'
+
+      if ('speechSynthesis' in window) {
+        const loadVoices = () => {
+          try {
+            availableVoices = window.speechSynthesis.getVoices()
+          } catch (e) {}
+        }
+        loadVoices()
+        window.speechSynthesis.onvoiceschanged = loadVoices
+      }
+
+      const quizData = {
+        title_eng: 'Independence Day Quiz Competition',
+        title_mal: 'സ്വാതന്ത്ര്യദിന ക്വിസ് മത്സരം',
+        questions: [
+          {
+            id: 1,
+            category_eng: 'General Freedom Movement',
+            category_mal: 'പൊതു സ്വാതന്ത്ര്യ സമരം',
+            qn_eng:
+              'Who was the first Prime Minister of independent India to hoist the national flag at the Red Fort on August 15, 1947?',
+            qn_mal:
+              '1947 ഓഗസ്റ്റ് 15-ന് ചെങ്കോട്ടയിൽ ആദ്യമായി ദേശീയ പതാക ഉയർത്തിയ സ്വതന്ത്ര ഇന്ത്യയുടെ ആദ്യ പ്രധാനമന്ത്രി ആര്?',
+            ans_eng: 'Jawaharlal Nehru',
+            ans_mal: 'ജവഹർലാൽ നെഹ്റു',
+          },
+          {
+            id: 2,
+            category_eng: 'General Freedom Movement',
+            category_mal: 'പൊതു സ്വാതന്ത്ര്യ സമരം',
+            qn_eng:
+              'Which freedom fighter designed the original Swaraj Flag in 1921?',
+            qn_mal:
+              '1921-ൽ സ്വരാജ് പതാക രൂപകൽപ്പന ചെയ്ത സ്വാതന്ത്ര്യസമര സേനാനി ആര്?',
+            ans_eng: 'Pingali Venkayya',
+            ans_mal: 'പിംഗളി വെങ്കയ്യ',
+          },
+          {
+            id: 3,
+            category_eng: 'Famous Slogans',
+            category_mal: 'പ്രശസ്തമായ മുദ്രാവാക്യങ്ങൾ',
+            qn_eng:
+              'Who gave the famous slogan "Give me blood, and I shall give you freedom"?',
+            qn_mal:
+              '"നിങ്ങൾ എനിക്ക് രക്തം തരൂ, ഞാൻ നിങ്ങൾക്ക് സ്വാതന്ത്ര്യം തരാം" എന്ന പ്രശസ്തമായ മുദ്രാവാക്യം ഉയർത്തിയത് ആര്?',
+            ans_eng: 'Subhash Chandra Bose',
+            ans_mal: 'സുഭാഷ് ചന്ദ്ര ബോസ്',
+          },
+          {
+            id: 4,
+            category_eng: 'Mass Movements',
+            category_mal: 'ജനകീയ പ്രസ്ഥാനങ്ങൾ',
+            qn_eng:
+              'In which year was the Quit India Movement launched by Mahatma Gandhi?',
+            qn_mal:
+              'മഹാത്മാഗാന്ധി ക്വിറ്റ് ഇന്ത്യ പ്രസ്ഥാനം ആരംഭിച്ച വർഷം ഏത്?',
+            ans_eng: '1942',
+            ans_mal: '1942',
+          },
+          {
+            id: 5,
+            category_eng: 'Women Freedom Fighters',
+            category_mal: 'വനിതാ സ്വാതന്ത്ര്യസമര സേനാനികൾ',
+            qn_eng:
+              'Who was known as the "Nightingale of India" and actively participated in the freedom struggle?',
+            qn_mal:
+              '"ഇന്ത്യയുടെ നൈറ്റിംഗേൾ" എന്നറിയപ്പെടുന്ന സ്വാതന്ത്ര്യസമര സേനാനി ആര്?',
+            ans_eng: 'Sarojini Naidu',
+            ans_mal: 'സരോജിനി നായിഡു',
+          },
+          {
+            id: 6,
+            category_eng: 'Mass Movements',
+            category_mal: 'ജനകീയ പ്രസ്ഥാനങ്ങൾ',
+            qn_eng:
+              'Which movement was started by Gandhi in 1930 after breaking the salt law at Dandi?',
+            qn_mal:
+              'ദണ്ഡിയിൽ ഉപ്പുനിയമം ലംഘിച്ച് ഗാന്ധിജി 1930-ൽ ആരംഭിച്ച പ്രസ്ഥാനം ഏത്?',
+            ans_eng: 'Civil Disobedience Movement',
+            ans_mal: 'സവിനയ നിയമലംഘന പ്രസ്ഥാനം',
+          },
+          {
+            id: 7,
+            category_eng: 'National Symbols',
+            category_mal: 'ദേശീയ ചിഹ്നങ്ങൾ',
+            qn_eng:
+              'Who wrote the national anthem of India, "Jana Gana Mana"?',
+            qn_mal:
+              'ഇന്ത്യയുടെ ദേശീയ ഗാനമായ "ജനഗണമന" രചിച്ചത് ആര്?',
+            ans_eng: 'Rabindranath Tagore',
+            ans_mal: 'രബീന്ദ്രനാഥ ടാഗോർ',
+          },
+          {
+            id: 8,
+            category_eng: 'Leaders of India',
+            category_mal: 'ഇന്ത്യൻ നേതാക്കൾ',
+            qn_eng:
+              'Who was the leader of the Bardoli Satyagraha and earned the title "Sardar"?',
+            qn_mal:
+              'ബർദോളി സത്യാഗ്രഹത്തിന് നേതൃത്വം നൽകുകയും "സർദാർ" എന്ന പദവി ലഭിക്കുകയും ചെയ്തതാര്?',
+            ans_eng: 'Vallabhbhai Patel',
+            ans_mal: 'വല്ലഭ്ഭായ് പട്ടേൽ',
+          },
+          {
+            id: 9,
+            category_eng: 'Armed Resistance',
+            category_mal: 'സായുധ പോരാട്ടം',
+            qn_eng:
+              'Who reorganized and led the Indian National Army (INA)?',
+            qn_mal:
+              'ഇന്ത്യൻ നാഷണൽ ആർമി (INA) പുനഃസംഘടിപ്പിച്ച് നയിച്ചത് ആര്?',
+            ans_eng: 'Subhash Chandra Bose',
+            ans_mal: 'സുഭാഷ് ചന്ദ്ര ബോസ്',
+          },
+          {
+            id: 10,
+            category_eng: 'National Symbols',
+            category_mal: 'ദേശീയ ചിഹ്നങ്ങൾ',
+            qn_eng:
+              'What is the ratio of the width of the Indian National Flag to its length?',
+            qn_mal:
+              'ഇന്ത്യൻ ദേശീയ പതാകയുടെ വീതിയും നീളവും തമ്മിലുള്ള അനുപാതം എത്ര?',
+            ans_eng: '2:3',
+            ans_mal: '2:3',
+          },
+          {
+            id: 11,
+            category_eng: 'Partition & Independence',
+            category_mal: 'വിഭജനവും സ്വാതന്ത്ര്യവും',
+            qn_eng:
+              'Who was the British Viceroy of India during the Partition in 1947?',
+            qn_mal:
+              '1947-ൽ ഇന്ത്യയുടെ വിഭജന സമയത്ത് ബ്രിട്ടീഷ് വൈസ്രോയി ആരായിരുന്നു?',
+            ans_eng: 'Lord Mountbatten',
+            ans_mal: 'മൗണ്ട്ബാറ്റൺ പ്രഭു',
+          },
+          {
+            id: 12,
+            category_eng: 'Revolutionaries',
+            category_mal: 'വിപ്ലവകാരികൾ',
+            qn_eng:
+              'Which martyr said "Inquilab Zindabad" in the Central Assembly in 1929?',
+            qn_mal:
+              '1929-ൽ സെൻട്രൽ അസംബ്ലിയിൽ "ഇൻക്വിലാബ് സിന്ദാബാദ്" എന്ന മുദ്രാവാക്യം മുഴക്കിയ രക്തസാക്ഷി ആര്?',
+            ans_eng: 'Bhagat Singh',
+            ans_mal: 'ഭഗത് സിംഗ്',
+          },
+          {
+            id: 13,
+            category_eng: 'Historic Events',
+            category_mal: 'ചരിത്ര സംഭവങ്ങൾ',
+            qn_eng:
+              'In which city did the tragic Jallianwala Bagh massacre take place in 1919?',
+            qn_mal:
+              '1919-ൽ ദാരുണമായ ജാലിയൻവാലാബാഗ് കൂട്ടക്കൊല നടന്ന നഗരം ഏത്?',
+            ans_eng: 'Amritsar',
+            ans_mal: 'അമൃത്സർ',
+          },
+          {
+            id: 14,
+            category_eng: 'Political Leaders',
+            category_mal: 'രാഷ്ട്രീയ നേതാക്കൾ',
+            qn_eng:
+              'Who was the founder of the Servants of India Society and political guru of Mahatma Gandhi?',
+            qn_mal:
+              'സെർവന്റ്സ് ഓഫ് ഇന്ത്യ സൊസൈറ്റിയുടെ സ്ഥാപകനും ഗാന്ധിജിയുടെ രാഷ്ട്രീയ ഗുരുവും ആര്?',
+            ans_eng: 'Gopal Krishna Gokhale',
+            ans_mal: 'ഗോപാലകൃഷ്ണ ഗോഖലെ',
+          },
+          {
+            id: 15,
+            category_eng: 'Regional Leaders',
+            category_mal: 'പ്രാദേശിക നേതാക്കൾ',
+            qn_eng:
+              'Which freedom fighter was popularly known as "Frontier Gandhi"?',
+            qn_mal:
+              '"അതിർത്തി ഗാന്ധി" എന്നറിയപ്പെട്ടിരുന്ന സ്വാതന്ത്ര്യസമര സേനാനി ആര്?',
+            ans_eng: 'Khan Abdul Ghaffar Khan',
+            ans_mal: 'ഖാൻ അബ്ദുൾ ഗാഫർ ഖാൻ',
+          },
+          {
+            id: 16,
+            category_eng: 'National Song',
+            category_mal: 'ദേശീയ ഗീതം',
+            qn_eng:
+              'Who wrote the national song of India, "Vande Mataram"?',
+            qn_mal:
+              'ഇന്ത്യയുടെ ദേശീയ ഗീതമായ "വന്ദേ മാതരം" രചിച്ചത് ആര്?',
+            ans_eng: 'Bankim Chandra Chattopadhyay',
+            ans_mal: 'ബങ്കിം ചന്ദ്ര ചട്ടോപാധ്യായ',
+          },
+          {
+            id: 17,
+            category_eng: 'Presidents of India',
+            category_mal: 'ഇന്ത്യൻ പ്രസിഡന്റുമാർ',
+            qn_eng:
+              'Who was the first President of Independent India?',
+            qn_mal:
+              'സ്വതന്ത്ര ഇന്ത്യയുടെ ആദ്യ പ്രസിഡന്റ് ആരായിരുന്നു?',
+            ans_eng: 'Dr. Rajendra Prasad',
+            ans_mal: 'ഡോ. രാജേന്ദ്ര പ്രസാദ്',
+          },
+          {
+            id: 18,
+            category_eng: 'Leaders of India',
+            category_mal: 'ഇന്ത്യൻ നേതാക്കൾ',
+            qn_eng:
+              'Who was known as the "Iron Man of India"?',
+            qn_mal:
+              '"ഇന്ത്യയുടെ ഇരുമ്പ് മനുഷ്യൻ" എന്നറിയപ്പെടുന്നത് ആര്?',
+            ans_eng: 'Sardar Vallabhbhai Patel',
+            ans_mal: 'സർദാർ വല്ലഭ്ഭായ് പട്ടേൽ',
+          },
+          {
+            id: 19,
+            category_eng: 'Independence Celebrations',
+            category_mal: 'സ്വാതന്ത്ര്യദിനാഘോഷം',
+            qn_eng:
+              'Where is the National Flag of India hoisted every year on Independence Day by the Prime Minister?',
+            qn_mal:
+              'സ്വാതന്ത്ര്യദിനത്തിൽ ഓരോ വർഷവും പ്രധാനമന്ത്രി ദേശീയ പതാക ഉയർത്തുന്നത് എവിടെയാണ്?',
+            ans_eng: 'Red Fort, Delhi',
+            ans_mal: 'ചെങ്കോട്ട, ഡൽഹി',
+          },
+          {
+            id: 20,
+            category_eng: 'Indian Constitution',
+            category_mal: 'ഇന്ത്യൻ ഭരണഘടന',
+            qn_eng:
+              'Who was the chairman of the Drafting Committee of the Indian Constitution?',
+            qn_mal:
+              'ഇന്ത്യൻ ഭരണഘടനയുടെ ഡ്രാഫ്റ്റിംഗ് കമ്മിറ്റിയുടെ ചെയർമാൻ ആരായിരുന്നു?',
+            ans_eng: 'Dr. B. R. Ambedkar',
+            ans_mal: 'ഡോ. ബി. ആർ. അംബേദ്കർ',
+          },
+        ],
+      }
+
+      let currentQuestionIndex = 0
+      let currentPhase = 0
+      const slideContainer = document.getElementById('slide')
+
+      function stopAudio() {
+        isReading = false
+        if ('speechSynthesis' in window) {
+          try {
+            window.speechSynthesis.cancel()
+          } catch (e) {}
+        }
+        if (currentAudio) {
+          try {
+            currentAudio.pause()
+            currentAudio.src = ''
+            currentAudio = null
+          } catch (e) {}
+        }
+      }
+
+      function playAudioUrl(url, timeoutMs = 25000) {
+        return new Promise((resolve, reject) => {
+          stopAudio()
+          isReading = true
+
+          const audio = new Audio()
+          currentAudio = audio
+          audio.crossOrigin = 'anonymous'
+          audio.src = url
+          audio.volume = 1.0
+
+          // Web Audio API volume booster (1.5x amplification)
+          try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext
+            if (AudioCtx) {
+              const audioCtx = new AudioCtx()
+              const source = audioCtx.createMediaElementSource(audio)
+              const gainNode = audioCtx.createGain()
+              gainNode.gain.value = 1.5
+              source.connect(gainNode)
+              gainNode.connect(audioCtx.destination)
+            }
+          } catch (e) {}
+
+          const timer = setTimeout(() => {
+            stopAudio()
+            reject(new Error('Audio playback timeout'))
+          }, timeoutMs)
+
+          audio.onended = () => {
+            clearTimeout(timer)
+            currentAudio = null
+            isReading = false
+            resolve()
+          }
+          audio.onerror = (e) => {
+            clearTimeout(timer)
+            currentAudio = null
+            isReading = false
+            reject(e)
+          }
+          audio.play().catch((e) => {
+            clearTimeout(timer)
+            currentAudio = null
+            isReading = false
+            reject(e)
+          })
+        })
+      }
+
+      function speakEnglishWebSpeech(text) {
+        return new Promise((resolve) => {
+          stopAudio()
+          isReading = true
+
+          if (!('speechSynthesis' in window)) return resolve()
+
+          const utterance = new SpeechSynthesisUtterance(text)
+          utterance.lang = 'en-IN'
+          utterance.rate = 0.9
+          utterance.volume = 1.0
+
+          utterance.onend = () => {
+            isReading = false
+            resolve()
+          }
+          utterance.onerror = () => {
+            isReading = false
+            resolve()
+          }
+
+          window.speechSynthesis.speak(utterance)
+        })
+      }
+
+      function speakMalayalamWebSpeech(text) {
+        return new Promise((resolve) => {
+          stopAudio()
+          isReading = true
+
+          if (!('speechSynthesis' in window)) return resolve()
+
+          const utterance = new SpeechSynthesisUtterance(text)
+          utterance.lang = 'ml-IN'
+          utterance.rate = 0.9
+          utterance.volume = 1.0
+
+          utterance.onend = () => {
+            isReading = false
+            resolve()
+          }
+          utterance.onerror = () => {
+            isReading = false
+            resolve()
+          }
+
+          window.speechSynthesis.speak(utterance)
+        })
+      }
+
+      async function speakQuestion(q) {
+        stopAudio()
+        isReading = true
+
+        activeEngineName = `🔊 Playing English Audio (Question ${q.id})...`
+        updateStatusBox()
+
+        // Step 1: Play pre-rendered local English WAV file
+        try {
+          await playAudioUrl(`audio/q${q.id}_eng.wav`)
+        } catch (e) {
+          console.warn(`Audio audio/q${q.id}_eng.wav unavailable, falling back to Web Speech Synthesis:`, e)
+          activeEngineName = `🗣️ Fallback: Speech Synthesis (English Q${q.id})...`
+          updateStatusBox()
+          await speakEnglishWebSpeech(`Question number ${q.id}. ${q.qn_eng}`)
+        }
+
+        if (!isReading && currentPhase !== 2.5) return
+
+        activeEngineName = `🔊 Playing Malayalam Audio (Question ${q.id})...`
+        updateStatusBox()
+
+        // Step 2: Play pre-rendered local Malayalam WAV file
+        try {
+          await playAudioUrl(`audio/q${q.id}_mal.wav`)
+        } catch (e) {
+          console.warn(`Audio audio/q${q.id}_mal.wav unavailable, falling back to Web Speech Synthesis:`, e)
+          activeEngineName = `🗣️ Fallback: Speech Synthesis (Malayalam Q${q.id})...`
+          updateStatusBox()
+          await speakMalayalamWebSpeech(`ചോദ്യം ${q.id}. ${q.qn_mal}`)
+        }
+
+        activeEngineName = '📁 Mode: Audio Files (Fallback: Speech Synthesis)'
+        updateStatusBox()
+      }
+
+      function updateStatusBox() {
+        const el = document.getElementById('engine-status')
+        if (el) el.innerText = activeEngineName
+      }
+
+      function renderSlide() {
+        let html = `<div class="status-box" id="engine-status">${activeEngineName}</div>
+                    <div class="kbd-hint">⌨️ Arrows / Spacebar</div>`
+
+        if (currentPhase === 0) {
+          stopAudio()
+          activeEngineName = '📁 Mode: Audio Files (Fallback: Speech Synthesis)'
+          html += `
+            <div class="badge">Quiz Presentation</div>
+            <h1>${quizData.title_eng}</h1>
+            <div class="sub-title">${quizData.title_mal}</div>
+            <div class="controls">
+                <button onclick="window.nextPhase(event)">Start Quiz</button>
+            </div>
+        `
+        } else if (currentPhase === 1) {
+          stopAudio()
+          html += `
+            <div class="badge">Question ${currentQuestionIndex + 1} of ${quizData.questions.length}</div>
+            <h1>Get Ready!</h1>
+            <div class="controls">
+                <button class="secondary" onclick="window.prevPhase(event)">Previous</button>
+                <button onclick="window.nextPhase(event)">Show Question</button>
+            </div>
+        `
+        } else if (currentPhase === 2) {
+          stopAudio()
+          const q = quizData.questions[currentQuestionIndex]
+          html += `
+            <div class="badge">${q.category_eng}</div>
+            <div class="qn-eng"><strong>Q${q.id}.</strong> ${q.qn_eng}</div>
+            <div class="qn-mal"><strong>ചോദ്യം ${q.id}.</strong> ${q.qn_mal}</div>
+            <div class="controls">
+                <button class="secondary" onclick="window.prevPhase(event)">Previous</button>
+                <button onclick="window.nextPhase(event)">Read Question 🔊</button>
+            </div>
+        `
+        } else if (currentPhase === 2.5) {
+          const q = quizData.questions[currentQuestionIndex]
+          html += `
+            <div class="speaking-badge">🔊 Reading Question...</div>
+            <div class="qn-eng"><strong>Q${q.id}.</strong> ${q.qn_eng}</div>
+            <div class="qn-mal"><strong>ചോദ്യം ${q.id}.</strong> ${q.qn_mal}</div>
+            <div class="controls">
+                <button class="secondary" onclick="window.reSpeak(event)">Re-play 🔊</button>
+                <button onclick="window.nextPhase(event)">Pen Down</button>
+            </div>
+        `
+          speakQuestion(q)
+        } else if (currentPhase === 3) {
+          stopAudio()
+          html += `
+            <div class="pen-down">✏️ PEN DOWN!</div>
+            <div class="controls">
+                <button class="secondary" onclick="window.prevPhase(event)">Previous</button>
+                <button onclick="window.nextPhase(event)">Show Answer</button>
+            </div>
+        `
+        } else if (currentPhase === 4) {
+          stopAudio()
+          const q = quizData.questions[currentQuestionIndex]
+          const isLastQuestion = currentQuestionIndex + 1 === quizData.questions.length
+          const nextBtnText = isLastQuestion ? 'Finish Quiz' : 'Next Question'
+          html += `
+            <div class="badge">Answer Key</div>
+            <div class="answer-box">
+                <div class="ans-eng">${q.ans_eng}</div>
+                <div class="ans-mal">${q.ans_mal}</div>
+            </div>
+            <div class="controls">
+                <button class="secondary" onclick="window.prevPhase(event)">Previous</button>
+                <button onclick="window.nextPhase(event)">${nextBtnText}</button>
+            </div>
+        `
+        } else if (currentPhase === 5) {
+          stopAudio()
+          html += `
+            <div class="badge">Quiz Finished</div>
+            <h1>Congratulations! 🎉</h1>
+            <div class="sub-title">ക്വിസ് വിജയകരമായി പൂർത്തിയായി!</div>
+            <div class="controls">
+                <button class="secondary" onclick="window.prevPhase(event)">Previous</button>
+                <button onclick="window.restartQuiz(event)">Restart Quiz 🔄</button>
+            </div>
+        `
+        }
+
+        slideContainer.innerHTML = html
+        updateStatusBox()
+      }
+
+      window.nextPhase = function (e) {
+        if (e && e.target && e.target.blur) e.target.blur()
+        if (currentPhase === 0) currentPhase = 1
+        else if (currentPhase === 1) currentPhase = 2
+        else if (currentPhase === 2) currentPhase = 2.5
+        else if (currentPhase === 2.5) currentPhase = 3
+        else if (currentPhase === 3) currentPhase = 4
+        else if (currentPhase === 4) {
+          if (currentQuestionIndex + 1 < quizData.questions.length) {
+            currentQuestionIndex++
+            currentPhase = 1
+          } else {
+            currentPhase = 5
+          }
+        }
+        renderSlide()
+      }
+
+      window.prevPhase = function (e) {
+        if (e && e.target && e.target.blur) e.target.blur()
+        if (currentPhase === 5) currentPhase = 4
+        else if (currentPhase === 4) currentPhase = 3
+        else if (currentPhase === 3) currentPhase = 2.5
+        else if (currentPhase === 2.5) currentPhase = 2
+        else if (currentPhase === 2) currentPhase = 1
+        else if (currentPhase === 1) {
+          if (currentQuestionIndex > 0) {
+            currentQuestionIndex--
+            currentPhase = 4
+          } else {
+            currentPhase = 0
+          }
+        }
+        renderSlide()
+      }
+
+      window.reSpeak = function (e) {
+        if (e && e.target && e.target.blur) e.target.blur()
+        speakQuestion(quizData.questions[currentQuestionIndex])
+      }
+
+      window.restartQuiz = function (e) {
+        if (e && e.target && e.target.blur) e.target.blur()
+        stopAudio()
+        currentQuestionIndex = 0
+        currentPhase = 0
+        renderSlide()
+      }
+
+      document.addEventListener('keydown', function (event) {
+        if (event.code === 'Space' || event.code === 'ArrowRight') {
+          event.preventDefault()
+          window.nextPhase()
+        } else if (event.code === 'ArrowLeft') {
+          event.preventDefault()
+          window.prevPhase()
+        }
+      })
+
+      renderSlide()
+    </script>
+  </body>
+</html>
