@@ -501,7 +501,7 @@
         }
       }
 
-      function playAudioUrl(url, timeoutMs = 25000) {
+      function playAudioUrl(url, timeoutMs = 25000, playbackRate = 1.0) {
         return new Promise((resolve, reject) => {
           stopAudio()
           isReading = true
@@ -512,6 +512,7 @@
           audio.crossOrigin = 'anonymous'
           audio.src = targetSrc
           audio.volume = 1.0
+          audio.playbackRate = playbackRate
 
           try {
             const AudioCtx = window.AudioContext || window.webkitAudioContext
@@ -560,7 +561,7 @@
 
           const utterance = new SpeechSynthesisUtterance(text)
           utterance.lang = 'en-IN'
-          utterance.rate = 0.9
+          utterance.rate = 0.8
           utterance.volume = 1.0
 
           utterance.onend = () => {
@@ -606,7 +607,7 @@
         isReading = true
 
         try {
-          await playAudioUrl(`audio/q${q.id}_eng.wav`)
+          await playAudioUrl(`audio/q${q.id}_eng.wav`, 25000, 0.85)
         } catch (e) {
           await speakEnglishWebSpeech(`Question number ${q.id}. ${q.qn_eng}`)
         }
@@ -614,7 +615,7 @@
         if (!isReading && currentPhase !== 2.5) return
 
         try {
-          await playAudioUrl(`audio/q${q.id}_mal.wav`)
+          await playAudioUrl(`audio/q${q.id}_mal.wav`, 25000, 1.0)
         } catch (e) {
           await speakMalayalamWebSpeech(`ചോദ്യം ${q.id}. ${q.qn_mal}`)
         }
