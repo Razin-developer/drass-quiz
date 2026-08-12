@@ -106,7 +106,7 @@ class TTSRequestHandler(BaseHTTPRequestHandler):
 def run_server():
     server = HTTPServer(("0.0.0.0", PORT), TTSRequestHandler)
     print(f"\n🚀 Facebook MMS-TTS Malayalam Server running on http://localhost:{PORT}")
-    print("Ready to serve TTS requests for madrass.html!")
+    print("Ready to serve TTS requests for index.html!")
     print("Press Ctrl+C to stop.\n")
     try:
         server.serve_forever()
