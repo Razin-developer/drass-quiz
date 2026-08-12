@@ -214,6 +214,35 @@
       let currentAudio = null
       let availableVoices = []
       let isReading = false
+      const audioCache = new Map()
+
+      // Background Preloading of all 40 audio files (20 English + 20 Malayalam)
+      function preloadAllAudio() {
+        for (let i = 1; i <= 20; i++) {
+          ['eng', 'mal'].forEach((lang) => {
+            const url = `audio/q${i}_${lang}.wav`
+            fetch(url)
+              .then((res) => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`)
+                return res.blob()
+              })
+              .then((blob) => {
+                const objectUrl = URL.createObjectURL(blob)
+                audioCache.set(url, objectUrl)
+              })
+              .catch((e) => {
+                // Fallback to standard audio preload
+                const audio = new Audio()
+                audio.preload = 'auto'
+                audio.src = url
+                audioCache.set(url, url)
+              })
+          })
+        }
+      }
+
+      // Start preloading immediately on script initialization
+      preloadAllAudio()
 
       if ('speechSynthesis' in window) {
         const loadVoices = () => {
@@ -436,7 +465,7 @@
             qn_mal:
               'സ്വാതന്ത്ര്യദിനത്തിൽ ഓരോ വർഷവും പ്രധാനമന്ത്രി ദേശീയ പതാക ഉയർത്തുന്നത് എവിടെയാണ്?',
             ans_eng: 'Red Fort, Delhi',
-            ans_mal: 'ചെങ്കോട്ട, ഡൽഹി',
+            ans_mal: 'ചെങ്കോട്ട, ডൽഹി',
           },
           {
             id: 20,
@@ -477,10 +506,11 @@
           stopAudio()
           isReading = true
 
+          const targetSrc = audioCache.get(url) || url
           const audio = new Audio()
           currentAudio = audio
           audio.crossOrigin = 'anonymous'
-          audio.src = url
+          audio.src = targetSrc
           audio.volume = 1.0
 
           try {
