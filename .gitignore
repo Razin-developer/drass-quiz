@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 .env
 .vercel
+temp_old_eng_audio/

@@ -607,7 +607,7 @@
         isReading = true
 
         try {
-          await playAudioUrl(`audio/q${q.id}_eng.wav`, 25000, 0.85)
+          await playAudioUrl(`audio/q${q.id}_eng.wav`, 25000, 1.0)
         } catch (e) {
           await speakEnglishWebSpeech(`Question number ${q.id}. ${q.qn_eng}`)
         }
