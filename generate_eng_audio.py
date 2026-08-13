@@ -4,6 +4,7 @@ import shutil
 import json
 import asyncio
 import edge_tts
+from gtts import gTTS
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -29,7 +30,7 @@ print(f"Moved {moved_count} old English audio files to '{TEMP_DIR}/'")
 # Step 2: Delete/clean any remaining audio files in audio/
 deleted_count = 0
 for f in os.listdir(AUDIO_DIR):
-    if f.endswith(".wav"):
+    if f.endswith(".wav") or f.endswith(".mp3"):
         os.remove(os.path.join(AUDIO_DIR, f))
         deleted_count += 1
 
@@ -57,7 +58,6 @@ with open(QUESTIONS_FILE, "r", encoding="utf-8") as qf:
 print(f"Loaded {len(questions)} questions from '{QUESTIONS_FILE}'")
 
 ENG_VOICE = "en-IN-PrabhatNeural"
-MAL_VOICE = "ml-IN-MidhunNeural"
 
 async def generate_all():
     print(f"\nSynthesizing {len(questions)} English male audio files using '{ENG_VOICE}'...")
@@ -68,15 +68,15 @@ async def generate_all():
         communicate = edge_tts.Communicate(text, ENG_VOICE, rate="-3%")
         await communicate.save(filepath)
 
-    print(f"\nSynthesizing {len(questions)} Malayalam male audio files using '{MAL_VOICE}'...")
+    print(f"\nSynthesizing {len(questions)} Malayalam smooth audio files using Google TTS (gTTS)...")
     for idx, q in enumerate(questions, start=1):
         filepath = os.path.join(AUDIO_DIR, f"q{idx}_mal.wav")
         text = f"ചോദ്യം {idx}. {q['malayalam_question']}"
         print(f"[{idx}/{len(questions)}] Synthesizing Malayalam: {filepath}...")
-        communicate = edge_tts.Communicate(text, MAL_VOICE, rate="-3%")
-        await communicate.save(filepath)
+        tts = gTTS(text=text, lang='ml')
+        tts.save(filepath)
 
-    print(f"\nAll {len(questions) * 2} audio files (English & Malayalam male voices) successfully generated!")
+    print(f"\nAll {len(questions) * 2} audio files (Smooth English & Malayalam voices) successfully generated!")
 
 if __name__ == "__main__":
     asyncio.run(generate_all())
