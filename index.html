@@ -435,6 +435,25 @@
 ]
       }
 
+      async function loadQuestionsData() {
+        try {
+          const res = await fetch('questions.json');
+          if (res.ok) {
+            const data = await res.json();
+            quizData.questions = data.map((item, idx) => ({
+              id: idx + 1,
+              question: item.question,
+              malayalam_question: item.malayalam_question,
+              answer: item.answer,
+              malayalam_answer: item.malayalam_answer
+            }));
+            preloadAllAudio();
+            renderSlide();
+          }
+        } catch (e) {}
+      }
+      loadQuestionsData();
+
       let currentQuestionIndex = 0
       let currentPhase = 0
       const slideContainer = document.getElementById('slide')
