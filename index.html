@@ -596,7 +596,7 @@
       }
 
       function renderSlide() {
-        let html = `<div class="kbd-hint">⌨️ Nav: Space / Arrows</div>`
+        let html = `<div class="kbd-hint">⌨️ Nav: Space / Arrows | <a href="/pdf" target="_blank" style="color: #58a6ff; text-decoration: none; font-weight: 600;">📄 Printable PDF</a></div>`
 
         if (currentPhase === 0) {
           stopAudio()
@@ -606,6 +606,7 @@
             <div class="sub-title">${quizData.title_mal}</div>
             <div class="controls">
                 <button onclick="window.nextPhase(event)">Start Quiz</button>
+                <button class="secondary" onclick="window.open('/pdf', '_blank')">📄 Printable PDF</button>
             </div>
         `
         } else if (currentPhase === 1) {
@@ -675,6 +676,7 @@
             <div class="sub-title">ക്വിസ് വിജയകരമായി പൂർത്തിയായി!</div>
             <div class="controls">
                 <button class="secondary" onclick="window.prevPhase(event)">Previous</button>
+                <button class="secondary" onclick="window.open('/pdf', '_blank')">📄 Printable PDF</button>
                 <button onclick="window.restartQuiz(event)">Restart Quiz 🔄</button>
             </div>
         `

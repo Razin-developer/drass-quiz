@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Questions & Answers PDF | സ്വാതന്ത്ര്യദിന ക്വിസ്</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', 'Noto Sans Malayalam', sans-serif;
+    }
+
+    body {
+      background-color: #f8f9fa;
+      color: #1a1a1a;
+      padding: 30px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .header {
+      text-align: center;
+      border-bottom: 3px double #1a2332;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      color: #0d1117;
+      margin-bottom: 6px;
+    }
+
+    .header h2 {
+      font-size: 1.4rem;
+      color: #4a5568;
+      font-weight: 600;
+    }
+
+    .meta-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 25px;
+      font-size: 0.95rem;
+      color: #718096;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 10px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 30px;
+      justify-content: center;
+      background: #edf2f7;
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    button {
+      background-color: #238636;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background-color: #2ea043;
+    }
+
+    button.secondary {
+      background-color: #4a5568;
+    }
+
+    button.secondary:hover {
+      background-color: #2d3748;
+    }
+
+    .question-card {
+      margin-bottom: 24px;
+      padding: 18px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fafbfc;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .question-header {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #2b6cb0;
+      margin-bottom: 8px;
+    }
+
+    .qn-eng {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1a202c;
+      margin-bottom: 6px;
+    }
+
+    .qn-mal {
+      font-size: 1.05rem;
+      color: #2d3748;
+      margin-bottom: 12px;
+    }
+
+    .answer-box {
+      background-color: #f0fff4;
+      border-left: 4px solid #38a169;
+      padding: 10px 14px;
+      border-radius: 4px;
+      margin-top: 8px;
+    }
+
+    .ans-eng {
+      font-weight: 700;
+      color: #22543d;
+      font-size: 1.05rem;
+    }
+
+    .ans-mal {
+      font-weight: 600;
+      color: #2f855a;
+      font-size: 1rem;
+    }
+
+    .hide-answers .answer-box {
+      display: none !important;
+    }
+
+    /* Print Specific Styles */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+
+      .container {
+        box-shadow: none;
+        padding: 0;
+        max-width: 100%;
+      }
+
+      .toolbar {
+        display: none !important;
+      }
+
+      .question-card {
+        border: 1px solid #cbd5e0;
+        background: white;
+        margin-bottom: 18px;
+        padding: 14px;
+      }
+
+      .header h1 {
+        font-size: 1.7rem;
+      }
+
+      .header h2 {
+        font-size: 1.2rem;
+      }
+
+      @page {
+        margin: 1.5cm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Independence Day Quiz Competition</h1>
+      <h2>സ്വാതന്ത്ര്യദിന ക്വിസ് മത്സരം - ചോദ്യോത്തരങ്ങൾ</h2>
+    </div>
+
+    <div class="meta-bar">
+      <span>Total Questions: <strong id="total-count">25</strong></span>
+      <span>Print Date: <strong id="print-date"></strong></span>
+    </div>
+
+    <div class="toolbar">
+      <button onclick="window.print()">🖨️ Print / Save as PDF</button>
+      <button class="secondary" onclick="toggleAnswers()" id="toggle-ans-btn">🙈 Hide Answer Key</button>
+      <button class="secondary" onclick="window.location.href='/'">🏠 Back to Quiz</button>
+    </div>
+
+    <div id="questions-list"></div>
+  </div>
+
+  <script>
+    document.getElementById('print-date').innerText = new Date().toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    let showAnswers = true;
+
+    function toggleAnswers() {
+      showAnswers = !showAnswers;
+      const list = document.getElementById('questions-list');
+      const btn = document.getElementById('toggle-ans-btn');
+      
+      if (showAnswers) {
+        list.classList.remove('hide-answers');
+        btn.innerText = '🙈 Hide Answer Key';
+      } else {
+        list.classList.add('hide-answers');
+        btn.innerText = '👁️ Show Answer Key';
+      }
+    }
+
+    async function loadQuestions() {
+      let questions = [];
+      try {
+        const res = await fetch('questions.json');
+        if (res.ok) {
+          questions = await res.json();
+        }
+      } catch(e) {}
+
+      if (!questions || questions.length === 0) {
+        // Fallback embedded questions if offline/local file
+        questions = [
+          {
+            "question": "Which historic movement was launched by Mahatma Gandhi in 1942 demanding an immediate end to British rule?",
+            "malayalam_question": "ബ്രിട്ടീഷ് ഭരണം അവസാനിപ്പിക്കണം എന്ന് ആവശ്യപ്പെട്ട് 1942-ൽ ഗാന്ധിജി ആരംഭിച്ച ചരിത്രപ്രസിദ്ധമായ പ്രസ്ഥാനം ഏതാണ്?",
+            "answer": "Quit India Movement (1942)",
+            "malayalam_answer": "ക്വിറ്റ് ഇന്ത്യ പ്രസ്ഥാനം (1942)"
+          }
+        ];
+      }
+
+      document.getElementById('total-count').innerText = questions.length;
+
+      const container = document.getElementById('questions-list');
+      let html = '';
+
+      questions.forEach((q, index) => {
+        const id = index + 1;
+        html += `
+          <div class="question-card">
+            <div class="question-header">Question ${id}</div>
+            <div class="qn-eng">Q${id}. ${q.question}</div>
+            <div class="qn-mal">ചോദ്യം ${id}. ${q.malayalam_question}</div>
+            <div class="answer-box">
+              <div class="ans-eng">Answer: ${q.answer}</div>
+              <div class="ans-mal">ഉത്തരം: ${q.malayalam_answer}</div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    loadQuestions();
+  </script>
+</body>
+</html>
