@@ -259,9 +259,23 @@
 
       questions.forEach((q, index) => {
         const id = index + 1;
+        const isTieBreaker = index >= 20;
+
+        if (index === 20) {
+          html += `
+            <div style="margin: 35px 0 20px 0; text-align: center; border-top: 2px dashed #d29922; padding-top: 20px;">
+              <h3 style="color: #b08800; font-size: 1.3rem;">🔥 Tie Breaker Round / ടൈ ബ്രേക്കർ റൗണ്ട്</h3>
+            </div>
+          `;
+        }
+
+        const headerLabel = isTieBreaker 
+          ? `Tie Breaker Question ${index - 19} (Q${id})`
+          : `Question ${id}`;
+
         html += `
           <div class="question-card">
-            <div class="question-header">Question ${id}</div>
+            <div class="question-header">${headerLabel}</div>
             <div class="qn-eng">Q${id}. ${q.question}</div>
             <div class="qn-mal">ചോദ്യം ${id}. ${q.malayalam_question}</div>
             <div class="answer-box">
