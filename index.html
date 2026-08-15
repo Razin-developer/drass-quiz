@@ -613,11 +613,12 @@
         `
         } else if (currentPhase === 0.5) {
           stopAudio()
+          const tieCount = quizData.questions.length - 20
           html += `
             <div class="badge" style="background: linear-gradient(135deg, #d29922, #f0883e); color: #161b22; font-weight: 700;">🔥 Tie Breaker Round</div>
             <h1>Tie Breaker Round</h1>
             <div class="sub-title">ടൈ ബ്രേക്കർ റൗണ്ട്</div>
-            <p style="color: #8b949e; font-size: 1.2rem; margin-bottom: 25px; font-weight: 600;">5 Tie Breaker Questions | 5 ടൈ ബ്രേക്കർ ചോദ്യങ്ങൾ</p>
+            <p style="color: #8b949e; font-size: 1.2rem; margin-bottom: 25px; font-weight: 600;">${tieCount} Tie Breaker Questions | ${tieCount} ടൈ ബ്രേക്കർ ചോദ്യങ്ങൾ</p>
             <div class="controls">
                 <button class="secondary" onclick="window.prevPhase(event)">Previous</button>
                 <button onclick="window.startTieBreaker(event)">Start Tie Breaker 🎯</button>
@@ -627,8 +628,9 @@
         } else if (currentPhase === 1) {
           stopAudio()
           const isTieBreaker = currentQuestionIndex >= 20
+          const tieCount = quizData.questions.length - 20
           const qNumDisplay = isTieBreaker 
-            ? `Tie Breaker - Question ${currentQuestionIndex - 19} of 5`
+            ? `Tie Breaker - Question ${currentQuestionIndex - 19} of ${tieCount}`
             : `Question ${currentQuestionIndex + 1} of 20`
           const badgeStyle = isTieBreaker 
             ? `style="background: linear-gradient(135deg, #d29922, #f0883e); color: #161b22; font-weight: 700;"`
@@ -645,8 +647,9 @@
           stopAudio()
           const q = quizData.questions[currentQuestionIndex]
           const isTieBreaker = currentQuestionIndex >= 20
+          const tieCount = quizData.questions.length - 20
           const qNumDisplay = isTieBreaker 
-            ? `Tie Breaker - Question ${currentQuestionIndex - 19} of 5`
+            ? `Tie Breaker - Question ${currentQuestionIndex - 19} of ${tieCount}`
             : `Question ${currentQuestionIndex + 1} of 20`
           const badgeStyle = isTieBreaker 
             ? `style="background: linear-gradient(135deg, #d29922, #f0883e); color: #161b22; font-weight: 700;"`
